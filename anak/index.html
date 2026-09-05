@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex, nofollow">
+<title>Perkembangan Ngaji Ananda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../app/gaya.css">
+<style>
+.bungkus{width:min(560px,100% - 28px);margin:0 auto;padding-bottom:56px}
+.kepala{
+  background:var(--green-deep);color:#F1EFE4;margin:0 -14px 20px;padding:26px 20px 24px;
+  border-radius:0 0 var(--r-lg) var(--r-lg);
+}
+@media (min-width:600px){.kepala{margin-left:0;margin-right:0;border-radius:0 0 var(--r-lg) var(--r-lg)}}
+.kepala small{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:#A9C3B9}
+.kepala h1{color:#F1EFE4;font-size:1.75rem;margin-top:5px}
+.kepala p{color:#A9C3B9;font-size:.86rem;margin-top:6px}
+
+.blok{margin-bottom:16px}
+.blok h2{
+  font-family:var(--f-body);font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--muted);font-weight:700;margin-bottom:9px;
+}
+.tumpuk{display:grid;gap:10px}
+.baris-nilai{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-bottom:1px dashed var(--line-soft);font-size:.92rem}
+.baris-nilai:last-child{border-bottom:0}
+.baris-nilai dt{color:var(--muted)}
+.baris-nilai dd{margin:0;font-weight:600;text-align:right}
+.bintang-teks{color:var(--gold);letter-spacing:1px}
+.riwayat{font-size:.9rem}
+.riwayat li{padding:11px 0;border-bottom:1px dashed var(--line-soft);list-style:none}
+.riwayat li:last-child{border-bottom:0}
+.riwayat b{display:block}
+.riwayat span{font-size:.82rem;color:var(--muted)}
+.kaki{text-align:center;font-size:.8rem;color:var(--muted);margin-top:26px;line-height:1.7}
+</style>
+</head>
+<body>
+
+<div class="bungkus">
+  <div id="muat" class="memuat"><span class="putar"></span> Memuat&hellip;</div>
+  <div id="isi" hidden></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../app/config.js"></script>
+<script>
+(function () {
+  "use strict";
+  var muat = document.getElementById("muat");
+  var isi = document.getElementById("isi");
+
+  function esc(t) {
+    if (t === null || t === undefined) return "";
+    return String(t).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  var BULAN = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  var HARI = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  function tglPanjang(s) {
+    if (!s) return "-";
+    var b = String(s).split("-"); if (b.length < 3) return s;
+    var d = new Date(+b[0], +b[1] - 1, +b[2]);
+    return HARI[d.getDay()] + ", " + (+b[2]) + " " + BULAN[+b[1] - 1] + " " + b[0];
+  }
+  function tglPendek(s) {
+    if (!s) return "-";
+    var b = String(s).split("-"); if (b.length < 3) return s;
+    return (+b[2]) + " " + BULAN[+b[1] - 1].slice(0, 3) + " " + b[0];
+  }
+  function periodePanjang(p) {
+    if (!p) return "-";
+    var b = String(p).split("-"); return BULAN[+b[1] - 1] + " " + b[0];
+  }
+  function rupiah(n) { return "Rp " + (Number(n) || 0).toLocaleString("id-ID"); }
+  function bintang(n) {
+    n = Number(n) || 0;
+    return n ? '<span class="bintang-teks">' + "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n) + "</span>" : "—";
+  }
+  function pesanKosong(judul, teks) {
+    muat.hidden = true; isi.hidden = false;
+    isi.innerHTML = '<div class="kepala"><small>Sanad</small><h1>' + esc(judul) + '</h1></div>' +
+      '<div class="kartu"><p style="font-size:.94rem;color:var(--ink-2)">' + esc(teks) + '</p></div>';
+  }
+
+  var token = new URLSearchParams(location.search).get("t");
+  var cfg = window.SANAD || {};
+
+  if (!cfg.url || !cfg.anonKey) {
+    pesanKosong("Belum siap", "Halaman ini belum tersambung ke database. Hubungi ustadzah."); return;
+  }
+  if (!token) {
+    pesanKosong("Link belum lengkap", "Buka lewat link lengkap yang dikirim ustadzah lewat WhatsApp."); return;
+  }
+
+  var sb = window.supabase.createClient(cfg.url, cfg.anonKey);
+
+  sb.rpc("lihat_anak", { t: token }).then(function (r) {
+    if (r.error) {
+      pesanKosong("Tidak bisa dibuka", "Terjadi gangguan saat memuat data. Coba lagi sebentar lagi.");
+      return;
+    }
+    if (!r.data) {
+      pesanKosong("Link tidak dikenali", "Link ini sudah tidak berlaku atau salah ketik. Minta ustadzah mengirim ulang linknya.");
+      return;
+    }
+    gambar(r.data);
+  });
+
+  function gambar(d) {
+    var s = d.santri || {};
+    var laporan = d.laporan || [];
+    var ujian = d.ujian || [];
+    var bayar = d.pembayaran || [];
+    var terakhir = laporan[0];
+
+    var h = '<div class="kepala"><small>' + esc(d.lembaga || "Sanad") + '</small>' +
+      '<h1>' + esc(s.nama) + '</h1>' +
+      '<p>Perkembangan ngaji &middot; dibimbing ' + esc(d.ustadzah || "ustadzah") + '</p></div>';
+
+    // --- jadwal berikutnya ---
+    h += '<div class="blok"><h2>Jadwal halaqah</h2><div class="kartu kartu-rapat">' +
+      (s.jadwal_hari
+        ? '<p style="font-weight:600">' + esc(s.jadwal_hari) + (s.jadwal_jam ? ", pukul " + esc(s.jadwal_jam) : "") + '</p>'
+        : '<p style="color:var(--muted)">Belum diatur.</p>') +
+      '</div></div>';
+
+    // --- kehadiran terakhir ---
+    if (terakhir) {
+      h += '<div class="blok"><h2>Pertemuan terakhir</h2><div class="kartu">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px">' +
+          '<b>' + esc(tglPanjang(terakhir.tanggal)) + '</b>' +
+          (terakhir.hadir ? '<span class="pill pill-ok">Hadir</span>' : '<span class="pill pill-bad">Tidak hadir</span>') +
+        '</div><dl style="margin:0">';
+      if (terakhir.hadir) {
+        if (terakhir.jilid) {
+          h += baris("Iqro", "Jilid " + terakhir.jilid +
+            (terakhir.hal_awal ? " · hal. " + terakhir.hal_awal + (terakhir.hal_akhir ? "–" + terakhir.hal_akhir : "") : ""));
+        }
+        if (terakhir.surah_baru) {
+          h += baris("Hafalan baru", esc(terakhir.surah_baru) +
+            (terakhir.ayat_baru_awal ? " " + terakhir.ayat_baru_awal + (terakhir.ayat_baru_akhir ? "–" + terakhir.ayat_baru_akhir : "") : ""));
+        }
+        if (terakhir.surah_murojaah) {
+          h += baris("Murojaah", esc(terakhir.surah_murojaah) +
+            (terakhir.ayat_mur_awal ? " " + terakhir.ayat_mur_awal + (terakhir.ayat_mur_akhir ? "–" + terakhir.ayat_mur_akhir : "") : ""));
+        }
+        if (terakhir.nilai_kelancaran) h += baris("Kelancaran", bintang(terakhir.nilai_kelancaran));
+        if (terakhir.nilai_fokus) h += baris("Fokus", bintang(terakhir.nilai_fokus));
+        if (terakhir.nilai_tajwid) h += baris("Tajwid", bintang(terakhir.nilai_tajwid));
+        if (terakhir.pr) h += baris("PR", esc(terakhir.pr));
+        if (terakhir.catatan) h += baris("Catatan", esc(terakhir.catatan));
+      } else {
+        if (terakhir.alasan) h += baris("Alasan", esc(terakhir.alasan));
+      }
+      h += "</dl></div></div>";
+    }
+
+    // --- progres ---
+    var progres = "";
+    if (s.program_iqro) {
+      var hal = Number(s.halaman_sekarang) || 0;
+      var pi = Math.max(0, Math.min(100, Math.round(hal / 32 * 100)));
+      progres += '<div style="margin-bottom:14px">' +
+        '<div style="display:flex;justify-content:space-between;font-size:.83rem;color:var(--muted);margin-bottom:6px">' +
+        '<span>Iqro Jilid ' + (s.jilid_sekarang || "—") + '</span><span class="num">' + (hal || "—") + ' / 32 halaman</span></div>' +
+        '<div class="bar"><i style="width:' + pi + '%"></i></div></div>';
+    }
+    if (s.program_tahfidz) {
+      var juz = Number(s.target_juz) || 0;
+      var pj = Math.max(0, Math.min(100, Math.round(juz / 30 * 100)));
+      progres += '<div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:.83rem;color:var(--muted);margin-bottom:6px">' +
+        '<span>Hafalan</span><span class="num">' + juz + ' / 30 juz</span></div>' +
+        '<div class="bar"><i style="width:' + pj + '%"></i></div></div>';
+    }
+    if (progres) h += '<div class="blok"><h2>Progres</h2><div class="kartu">' + progres + '</div></div>';
+
+    // --- riwayat pertemuan ---
+    if (laporan.length > 1) {
+      h += '<div class="blok"><h2>Pertemuan sebelumnya</h2><div class="kartu"><ul class="riwayat" style="margin:0;padding:0">';
+      laporan.slice(1).forEach(function (l) {
+        var materi = [];
+        if (l.jilid) materi.push("Jilid " + l.jilid + (l.hal_awal ? " hal. " + l.hal_awal + (l.hal_akhir ? "–" + l.hal_akhir : "") : ""));
+        if (l.surah_baru) materi.push(l.surah_baru);
+        if (!l.hadir) materi.push(l.alasan || "tidak hadir");
+        h += '<li><b>' + esc(tglPendek(l.tanggal)) + (l.hadir ? "" : " · tidak hadir") + '</b>' +
+          '<span>' + esc(materi.join(" · ") || "—") + '</span></li>';
+      });
+      h += "</ul></div></div>";
+    }
+
+    // --- ujian & sertifikat ---
+    if (ujian.length) {
+      h += '<div class="blok"><h2>Riwayat ujian</h2><div class="kartu"><ul class="riwayat" style="margin:0;padding:0">';
+      ujian.forEach(function (u) {
+        var lulus = u.nilai && u.nilai !== "Rosib";
+        h += '<li style="display:flex;justify-content:space-between;gap:12px;align-items:center">' +
+          '<span><b>' + esc(labelCapaian(u.program, u.capaian)) + '</b>' +
+          '<span>' + esc(tglPendek(u.tanggal)) + '</span></span>' +
+          '<span class="pill ' + (lulus ? "pill-ok" : "pill-bad") + '">' + esc(u.nilai || "—") + '</span></li>';
+      });
+      h += "</ul>";
+      if (ujian.some(function (u) { return u.nilai && u.nilai !== "Rosib"; })) {
+        h += '<p style="font-size:.84rem;color:var(--muted);margin-top:12px">' +
+          'Sertifikat kelulusan dikirim ustadzah lewat WhatsApp.</p>';
+      }
+      h += "</div></div>";
+    }
+
+    // --- pembayaran ---
+    if (bayar.length) {
+      h += '<div class="blok"><h2>Pembayaran</h2><div class="kartu"><ul class="riwayat" style="margin:0;padding:0">';
+      bayar.forEach(function (p) {
+        h += '<li style="display:flex;justify-content:space-between;gap:12px;align-items:center">' +
+          '<span><b>' + esc(periodePanjang(p.periode)) + '</b><span class="num">' + rupiah(p.nominal) +
+          (p.jatuh_tempo ? " · jatuh tempo " + esc(tglPendek(p.jatuh_tempo)) : "") + '</span></span>' +
+          '<span class="pill ' + (p.lunas ? "pill-ok" : "pill-warn") + '">' + (p.lunas ? "Lunas" : "Belum bayar") + '</span></li>';
+      });
+      h += "</ul></div></div>";
+    }
+
+    h += '<p class="kaki">Halaman ini hanya bisa dilihat, tidak bisa diubah.<br>' +
+      'Ada yang ingin ditanyakan? Hubungi ' + esc(d.ustadzah || "ustadzah") + ' langsung.</p>';
+
+    muat.hidden = true;
+    isi.hidden = false;
+    isi.innerHTML = h;
+  }
+
+  function baris(k, v) {
+    return '<div class="baris-nilai"><dt>' + esc(k) + "</dt><dd>" + v + "</dd></div>";
+  }
+
+  function labelCapaian(program, kode) {
+    if (program === "iqro") {
+      if (kode === "khatam") return "Khatam Iqro";
+      return "Naik " + kode.replace("jilid", "Jilid ");
+    }
+    if (kode === "0.25") return "¼ juz";
+    if (kode === "0.5") return "½ juz";
+    return kode + " juz";
+  }
+})();
+</script>
+</body>
+</html>
