@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Sanad - sistem laporan perkembangan ngaji privat: catat halaqah harian, jadwalkan ujian kenaikan, dan kirim laporan ke orang tua lewat WhatsApp.">
+<meta name="color-scheme" content="light dark">
+<title>Sanad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+
+<style>
+:root{
+  --paper:#FBF8F0;
+  --surface:#FFFFFF;
+  --surface-2:#F4F0E4;
+  --ink:#221E18;
+  --ink-2:#4A4438;
+  --muted:#6B6455;
+  --line:#E6DECA;
+  --line-soft:#EFE9DA;
+  --green:#1F5C4F;
+  --green-deep:#123B32;
+  --green-soft:#E4EDE9;
+  --green-text:#1A4F44;
+  --on-green:#FFFFFF;
+  --gold:#A9762A;
+  --gold-soft:#F6EEDD;
+  --danger:#9A2F2A;
+
+  --cover-bg:#123B32;
+  --cover-fg:#F1EFE4;
+  --cover-muted:#A9C3B9;
+  --cover-line:rgba(241,239,228,.16);
+  --cover-panel:rgba(255,255,255,.06);
+
+  --shadow-sm:0 1px 2px rgba(34,30,24,.05);
+  --shadow-md:0 10px 28px -18px rgba(18,59,50,.45);
+  --shadow-lg:0 28px 60px -34px rgba(18,59,50,.55);
+
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --measure:64ch;
+  --pad:clamp(18px,4vw,40px);
+  --gap:clamp(16px,2.4vw,28px);
+
+  --f-display:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-body:"Plus Jakarta Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#15130E;
+    --surface:#1D1A14;
+    --surface-2:#24211A;
+    --ink:#F2EEE2;
+    --ink-2:#D6CFBE;
+    --muted:#A29A87;
+    --line:#37322A;
+    --line-soft:#2C2821;
+    --green:#69AD99;
+    --green-deep:#0E2E27;
+    --green-soft:#1B2E29;
+    --green-text:#8CC7B4;
+    --on-green:#0E2E27;
+    --gold:#D5A254;
+    --gold-soft:#2B2418;
+    --danger:#E08A83;
+    --cover-bg:#0E2E27;
+    --cover-fg:#F1EFE4;
+    --cover-muted:#9BB9AE;
+    --cover-line:rgba(241,239,228,.14);
+    --cover-panel:rgba(255,255,255,.05);
+    --shadow-md:0 10px 28px -18px rgba(0,0,0,.7);
+    --shadow-lg:0 28px 60px -34px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#15130E;
+  --surface:#1D1A14;
+  --surface-2:#24211A;
+  --ink:#F2EEE2;
+  --ink-2:#D6CFBE;
+  --muted:#A29A87;
+  --line:#37322A;
+  --line-soft:#2C2821;
+  --green:#69AD99;
+  --green-deep:#0E2E27;
+  --green-soft:#1B2E29;
+  --green-text:#8CC7B4;
+  --on-green:#0E2E27;
+  --gold:#D5A254;
+  --gold-soft:#2B2418;
+  --danger:#E08A83;
+  --cover-bg:#0E2E27;
+  --cover-fg:#F1EFE4;
+  --cover-muted:#9BB9AE;
+  --cover-line:rgba(241,239,228,.14);
+  --cover-panel:rgba(255,255,255,.05);
+  --shadow-md:0 10px 28px -18px rgba(0,0,0,.7);
+  --shadow-lg:0 28px 60px -34px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--f-body);
+  font-size:17px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:var(--f-display);font-weight:600;line-height:1.14;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.3rem,1.4rem + 3.6vw,4rem);letter-spacing:-.02em}
+h2{font-size:clamp(1.7rem,1.2rem + 1.9vw,2.6rem);letter-spacing:-.015em}
+h3{font-size:1.22rem;letter-spacing:-.01em}
+p{margin:0}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:3px}
+img,svg{max-width:100%}
+.wrap{width:min(1180px,100% - 2*var(--pad));margin-inline:auto}
+.narrow{max-width:var(--measure)}
+
+.eyebrow{
+  font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 14px;display:flex;align-items:center;gap:10px;
+}
+.eyebrow::before{content:"";width:22px;height:1px;background:var(--gold);flex:none}
+.lede{font-size:1.06rem;color:var(--ink-2);max-width:var(--measure)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- nav ---------- */
+.nav{
+  position:sticky;top:0;z-index:50;
+  background:color-mix(in srgb,var(--paper) 88%,transparent);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line-soft);
+}
+.nav-in{display:flex;align-items:center;gap:20px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--f-display);font-size:1.32rem;font-weight:600;letter-spacing:.02em}
+.brand .mark{width:26px;height:26px;flex:none;color:var(--green)}
+.nav-links{display:none;gap:26px;margin-left:auto;font-size:.92rem;font-weight:500}
+.nav-links a{text-decoration:none;color:var(--ink-2);padding:6px 0}
+.nav-links a:hover{color:var(--green-text)}
+.nav .btn{margin-left:auto}
+@media (min-width:900px){
+  .nav-links{display:flex}
+  .nav .btn{margin-left:24px}
+}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:44px;padding:0 20px;border-radius:var(--r-md);
+  font-family:var(--f-body);font-size:.95rem;font-weight:600;
+  text-decoration:none;cursor:pointer;border:1px solid transparent;
+  transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease;
+}
+.btn-primary{background:var(--green);color:var(--on-green);box-shadow:var(--shadow-md)}
+.btn-primary:hover{background:var(--green-deep);transform:translateY(-1px)}
+.btn-ghost{border-color:var(--line);background:var(--surface);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--green);color:var(--green-text)}
+.btn-cover{background:var(--cover-fg);color:#123B32}
+.btn-cover:hover{background:#fff;transform:translateY(-1px)}
+.btn-cover-ghost{border-color:var(--cover-line);color:var(--cover-fg)}
+.btn-cover-ghost:hover{border-color:var(--cover-fg)}
+
+/* ---------- hero / cover ---------- */
+.cover{background:var(--cover-bg);color:var(--cover-fg);padding:clamp(52px,7vw,92px) 0 clamp(60px,8vw,104px);position:relative;overflow:hidden}
+.cover::after{
+  content:"";position:absolute;inset:auto 0 0 0;height:5px;
+  background:linear-gradient(90deg,var(--gold) 0 22%,transparent 22% 24%,var(--gold) 24% 30%,transparent 30%);
+  opacity:.55;
+}
+.cover-grid{display:grid;gap:clamp(34px,5vw,56px);align-items:start}
+@media (min-width:1000px){.cover-grid{grid-template-columns:1.02fr .98fr;align-items:center}}
+.cover .eyebrow{color:var(--cover-muted)}
+.cover h1{color:var(--cover-fg)}
+.cover h1 em{font-style:italic;color:#EBC985;font-weight:400}
+.cover-lede{margin-top:20px;color:var(--cover-muted);font-size:1.08rem;max-width:52ch}
+.cover-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.cover-facts{
+  display:flex;flex-wrap:wrap;gap:0;margin-top:36px;
+  border-top:1px solid var(--cover-line);padding-top:20px;
+}
+.fact{padding-right:28px;margin-right:28px;border-right:1px solid var(--cover-line)}
+.fact:last-child{border-right:0;margin-right:0;padding-right:0}
+.fact b{display:block;font-family:var(--f-display);font-size:1.6rem;font-weight:500;line-height:1.1}
+.fact span{font-size:.8rem;color:var(--cover-muted);letter-spacing:.04em}
+
+/* report card mock */
+.card-report{
+  background:var(--surface);color:var(--ink);border-radius:var(--r-lg);
+  border:1px solid var(--line);box-shadow:var(--shadow-lg);overflow:hidden;
+}
+.card-report .cr-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line-soft);background:var(--surface-2)}
+.cr-head strong{display:block;font-family:var(--f-display);font-size:1.05rem;font-weight:600;line-height:1.3}
+.cr-head span{font-size:.78rem;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:600;letter-spacing:.02em;padding:4px 10px;border-radius:999px;border:1px solid transparent}
+.pill-ok{background:var(--green-soft);color:var(--green-text);border-color:color-mix(in srgb,var(--green) 30%,transparent)}
+.pill-warn{background:var(--gold-soft);color:var(--gold);border-color:color-mix(in srgb,var(--gold) 35%,transparent)}
+.pill-off{background:var(--surface-2);color:var(--muted);border-color:var(--line)}
+.cr-body{padding:20px}
+.cr-row{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px dashed var(--line-soft);font-size:.92rem}
+.cr-row:last-of-type{border-bottom:0}
+.cr-row dt{color:var(--muted)}
+.cr-row dd{margin:0;font-weight:600;text-align:right}
+.stars{display:inline-flex;gap:2px;color:var(--gold);vertical-align:-2px}
+.stars .off{color:var(--line)}
+.bar{height:7px;border-radius:999px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line-soft)}
+.bar i{display:block;height:100%;background:var(--green);border-radius:999px}
+.cr-foot{padding:14px 20px;border-top:1px solid var(--line-soft);background:var(--surface-2);display:flex;align-items:center;gap:10px;font-size:.84rem;color:var(--muted)}
+
+/* ---------- sections ---------- */
+section{padding:clamp(56px,7vw,96px) 0}
+.section-head{margin-bottom:clamp(28px,4vw,44px)}
+.rule{border:0;border-top:1px solid var(--line);margin:0}
+
+/* alur data */
+.flow{display:grid;gap:var(--gap);grid-template-columns:1fr}
+@media (min-width:860px){.flow{grid-template-columns:.9fr 1.1fr;align-items:center}}
+.flow-map{display:grid;gap:10px}
+.node{
+  display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:var(--r-md);
+  border:1px solid var(--line);background:var(--surface);font-size:.94rem;font-weight:500;
+}
+.node svg{width:18px;height:18px;color:var(--green);flex:none}
+.node-root{background:var(--green);color:var(--on-green);border-color:var(--green);font-family:var(--f-display);font-size:1.1rem;font-weight:600}
+.node-root svg{color:currentColor}
+.node-kids{display:grid;gap:8px;grid-template-columns:repeat(2,1fr);padding-left:22px;position:relative}
+.node-kids::before{content:"";position:absolute;left:8px;top:-6px;bottom:16px;width:1px;background:var(--line)}
+.node-kids .node{font-size:.85rem;padding:10px 12px}
+
+table{width:100%;border-collapse:collapse;font-size:.93rem}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface)}
+th,td{text-align:left;padding:14px 16px;vertical-align:top;border-bottom:1px solid var(--line-soft)}
+thead th{background:var(--green);color:var(--on-green);font-family:var(--f-body);font-size:.76rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+tbody tr:last-child td{border-bottom:0}
+td:first-child{font-weight:600;white-space:nowrap}
+
+/* menu grid */
+.menus{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+@media (min-width:620px){.menus{grid-template-columns:repeat(2,1fr)}}
+@media (min-width:980px){.menus{grid-template-columns:repeat(3,1fr)}}
+.menu{background:var(--surface);padding:24px;display:flex;flex-direction:column;gap:9px;transition:background .18s ease}
+.menu:hover{background:var(--surface-2)}
+.menu-top{display:flex;align-items:center;gap:10px}
+.menu-top svg{width:20px;height:20px;color:var(--green);flex:none}
+.menu h3{font-size:1.06rem}
+.menu p{font-size:.9rem;color:var(--muted);line-height:1.6}
+
+/* laporan / tabs */
+.report{display:grid;gap:var(--gap)}
+@media (min-width:960px){.report{grid-template-columns:1.05fr .95fr;align-items:start}}
+.tabs{display:inline-flex;padding:4px;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;margin-bottom:20px}
+.tab{
+  min-height:40px;padding:0 18px;border-radius:999px;border:0;cursor:pointer;
+  font-family:var(--f-body);font-size:.9rem;font-weight:600;color:var(--muted);background:transparent;
+  transition:background .18s ease,color .18s ease;
+}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--green);color:var(--on-green)}
+.field-list{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.field{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface)}
+.field svg{width:17px;height:17px;color:var(--gold);flex:none;margin-top:3px}
+.field b{display:block;font-size:.94rem}
+.field span{font-size:.87rem;color:var(--muted)}
+
+.wa{
+  background:#0F231C;border-radius:var(--r-lg);padding:18px;border:1px solid var(--cover-line);
+  box-shadow:var(--shadow-lg);
+}
+.wa-top{display:flex;align-items:center;gap:10px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.1);color:#CFE3DA;font-size:.82rem}
+.wa-top svg{width:18px;height:18px;color:#5CCB8E}
+.bubble{
+  margin-top:16px;background:#E7F3E9;color:#17231C;border-radius:12px 12px 12px 3px;
+  padding:14px 16px;font-size:.88rem;line-height:1.62;white-space:pre-wrap;
+  font-family:var(--f-body);
+}
+.bubble strong{font-weight:700}
+.wa-time{display:block;text-align:right;font-size:.7rem;color:#5C7267;margin-top:8px}
+.wa-note{margin-top:14px;font-size:.8rem;color:#9DB6AB;display:flex;gap:8px;align-items:flex-start}
+.wa-note svg{width:15px;height:15px;flex:none;margin-top:3px}
+
+/* sanad chain */
+.chain{display:grid;gap:var(--gap)}
+@media (min-width:900px){.chain{grid-template-columns:1fr 1fr}}
+.track{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);padding:24px}
+.track h3{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.track > p{font-size:.88rem;color:var(--muted);margin-bottom:20px}
+.links{list-style:none;margin:0;padding:0;position:relative}
+.links::before{content:"";position:absolute;left:13px;top:14px;bottom:14px;width:2px;background:var(--line)}
+.link{display:flex;gap:14px;align-items:center;padding:9px 0;position:relative}
+.link .dot{
+  width:28px;height:28px;flex:none;border-radius:50%;border:2px solid var(--line);
+  background:var(--surface);display:grid;place-items:center;font-size:.68rem;font-weight:700;
+  color:var(--muted);position:relative;z-index:1;font-variant-numeric:tabular-nums;
+}
+.link.done .dot{background:var(--green);border-color:var(--green);color:var(--on-green)}
+.link.now .dot{border-color:var(--gold);color:var(--gold);background:var(--gold-soft)}
+.link-body{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;flex:1;min-width:0}
+.link-body b{font-size:.95rem;font-weight:600}
+.link-body span{font-size:.8rem;color:var(--muted)}
+.grades{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line-soft)}
+.grade{font-size:.76rem;font-weight:600;padding:5px 11px;border-radius:var(--r-sm);background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
+.grade.top{background:var(--green-soft);color:var(--green-text);border-color:color-mix(in srgb,var(--green) 30%,transparent)}
+.grade.fail{background:color-mix(in srgb,var(--danger) 10%,transparent);color:var(--danger);border-color:color-mix(in srgb,var(--danger) 30%,transparent)}
+
+.cert{
+  margin-top:var(--gap);border:1px solid var(--gold);border-radius:var(--r-lg);
+  background:var(--gold-soft);padding:24px;display:flex;gap:18px;align-items:flex-start;
+}
+.cert svg{width:34px;height:34px;color:var(--gold);flex:none}
+.cert h3{margin-bottom:6px}
+.cert p{font-size:.92rem;color:var(--ink-2)}
+
+/* orang tua */
+.parent{display:grid;gap:clamp(28px,4vw,48px);align-items:center}
+@media (min-width:920px){.parent{grid-template-columns:1fr .8fr}}
+.phone{
+  max-width:330px;margin-inline:auto;border:10px solid var(--ink);border-radius:34px;
+  background:var(--paper);box-shadow:var(--shadow-lg);overflow:hidden;
+}
+.ph-head{background:var(--green);color:var(--on-green);padding:18px 18px 16px}
+.ph-head small{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
+.ph-head strong{display:block;font-family:var(--f-display);font-size:1.2rem;font-weight:600;margin-top:3px}
+.ph-body{padding:16px;display:grid;gap:12px}
+.ph-card{border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);padding:13px 14px}
+.ph-card h4{font-family:var(--f-body);font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:7px}
+.ph-card p{font-size:.88rem;font-weight:600}
+.ph-card small{font-size:.78rem;color:var(--muted);font-weight:400;display:block;margin-top:3px}
+.checklist{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:12px}
+.checklist li{display:flex;gap:11px;align-items:flex-start;font-size:.96rem}
+.checklist svg{width:19px;height:19px;color:var(--green);flex:none;margin-top:3px}
+
+/* alur harian */
+.steps{list-style:none;margin:0;padding:0;counter-reset:s;display:grid;gap:0;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);overflow:hidden}
+.step{display:grid;grid-template-columns:auto 1fr;gap:16px;padding:20px var(--pad);border-bottom:1px solid var(--line-soft);align-items:start}
+.step:last-child{border-bottom:0}
+@media (min-width:760px){.step{grid-template-columns:auto 260px 1fr;align-items:baseline;gap:22px}}
+.step-n{
+  counter-increment:s;font-family:var(--f-display);font-size:1.05rem;font-weight:600;
+  width:32px;height:32px;border-radius:50%;background:var(--green-soft);color:var(--green-text);
+  display:grid;place-items:center;flex:none;
+}
+.step-n::before{content:counter(s)}
+.step b{font-size:1rem;font-weight:600}
+.step p{font-size:.92rem;color:var(--muted)}
+
+/* status */
+.status{display:grid;gap:var(--gap)}
+@media (min-width:880px){.status{grid-template-columns:1fr 1fr}}
+.panel{border:1px solid var(--line);border-radius:var(--r-lg);padding:26px;background:var(--surface)}
+.panel.now{background:var(--surface-2)}
+.panel h3{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.panel ul{list-style:none;margin:0;padding:0;display:grid;gap:13px}
+.panel li{display:flex;gap:11px;font-size:.93rem;color:var(--ink-2);line-height:1.6}
+.panel li svg{width:17px;height:17px;flex:none;margin-top:4px}
+.panel.now li svg{color:var(--gold)}
+.panel.next li svg{color:var(--green)}
+
+/* faq */
+.faq{border-top:1px solid var(--line)}
+.qa{border-bottom:1px solid var(--line)}
+.qa button{
+  width:100%;display:flex;justify-content:space-between;align-items:center;gap:20px;
+  background:none;border:0;padding:22px 0;cursor:pointer;text-align:left;
+  font-family:var(--f-display);font-size:1.1rem;font-weight:600;color:var(--ink);
+}
+.qa button:hover{color:var(--green-text)}
+.qa .chev{width:20px;height:20px;flex:none;color:var(--muted);transition:transform .22s ease}
+.qa button[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.qa .ans{display:none;padding:0 0 22px;max-width:var(--measure);color:var(--ink-2);font-size:.96rem}
+.qa .ans.open{display:block}
+
+/* cta */
+.endcta{background:var(--cover-bg);color:var(--cover-fg);border-radius:var(--r-lg);padding:clamp(34px,5vw,60px);text-align:center;box-shadow:var(--shadow-lg)}
+.endcta h2{color:var(--cover-fg);max-width:20ch;margin-inline:auto}
+.endcta p{color:var(--cover-muted);margin:16px auto 0;max-width:52ch}
+.endcta .cover-cta{justify-content:center}
+
+footer{border-top:1px solid var(--line);padding:34px 0 46px;margin-top:clamp(56px,7vw,90px)}
+.foot{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;font-size:.85rem;color:var(--muted)}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;transition-duration:.001ms !important}
+}
+</style>
+<style>img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#atas">
+      <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/>
+        <path d="M4 5.5v15"/><path d="M8.5 8.5h6"/><path d="M8.5 12h4"/>
+      </svg>
+      Sanad
+    </a>
+    <nav class="nav-links" aria-label="Bagian halaman">
+      <a href="#menu">Menu</a>
+      <a href="#laporan">Laporan</a>
+      <a href="#ujian">Ujian</a>
+      <a href="#orangtua">Orang Tua</a>
+      <a href="#status">Status</a>
+    </nav>
+    <a class="btn btn-primary" href="#status">Lihat prototipe</a>
+  </div>
+</header>
+
+<main id="atas">
+
+  <!-- ============ HERO ============ -->
+  <section class="cover" style="padding-top:clamp(44px,6vw,80px)">
+    <div class="wrap cover-grid">
+      <div>
+        <p class="eyebrow">Sistem Laporan Perkembangan Ngaji Privat</p>
+        <h1>Selesai mengajar,<br>orang tua <em>langsung tahu</em>.</h1>
+        <p class="cover-lede">Satu tempat untuk mencatat halaqah harian, menjadwalkan ujian kenaikan, dan mengirim laporan ke orang tua lewat WhatsApp &mdash; tanpa orang tua perlu membuat akun.</p>
+        <div class="cover-cta">
+          <a class="btn btn-cover" href="#laporan">Lihat cara kerjanya</a>
+          <a class="btn btn-cover-ghost" href="#alur">Alur kerja harian</a>
+        </div>
+        <div class="cover-facts">
+          <div class="fact"><b class="num">9</b><span>menu ustadzah</span></div>
+          <div class="fact"><b class="num">114</b><span>surah siap pilih</span></div>
+          <div class="fact"><b class="num">15</b><span>capaian ujian</span></div>
+          <div class="fact"><b>0</b><span>login untuk orang tua</span></div>
+        </div>
+      </div>
+
+      <div class="card-report">
+        <div class="cr-head">
+          <div>
+            <strong>Aisyah Nur Ramadhani</strong>
+            <span class="num">Rabu, 3 September 2026 &middot; 16.00&ndash;17.00</span>
+          </div>
+          <span class="pill pill-ok">Hadir</span>
+        </div>
+        <div class="cr-body">
+          <dl style="margin:0">
+            <div class="cr-row"><dt>Program</dt><dd>Iqro &mdash; Jilid 4</dd></div>
+            <div class="cr-row"><dt>Halaman</dt><dd class="num">12 &ndash; 15</dd></div>
+            <div class="cr-row"><dt>Kelancaran</dt><dd><span class="stars" aria-label="4 dari 5">&#9733;&#9733;&#9733;&#9733;<span class="off">&#9733;</span></span></dd></div>
+            <div class="cr-row"><dt>Fokus</dt><dd><span class="stars" aria-label="5 dari 5">&#9733;&#9733;&#9733;&#9733;&#9733;</span></dd></div>
+            <div class="cr-row"><dt>Tajwid</dt><dd><span class="stars" aria-label="3 dari 5">&#9733;&#9733;&#9733;<span class="off">&#9733;&#9733;</span></span></dd></div>
+            <div class="cr-row"><dt>PR</dt><dd style="font-weight:500;color:var(--ink-2)">Ulang hal. 14&ndash;15, 3&times; sehari</dd></div>
+          </dl>
+          <div style="margin-top:18px">
+            <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);margin-bottom:7px">
+              <span>Progres Jilid 4</span><span class="num">15 / 32 halaman</span>
+            </div>
+            <div class="bar"><i style="width:47%"></i></div>
+          </div>
+        </div>
+        <div class="cr-foot">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg>
+          Pratinjau pesan tersusun otomatis, tinggal satu klik kirim
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ALUR DATA ============ -->
+  <section id="alur-data">
+    <div class="wrap">
+      <div class="section-head narrow">
+        <p class="eyebrow">Gambaran umum</p>
+        <h2>Semuanya berputar pada satu hal: santri</h2>
+        <p class="lede" style="margin-top:16px">Setiap santri memiliki program belajar, jadwal, riwayat laporan, riwayat ujian, dan status pembayaran. Semua menu pada dasarnya hanyalah cara berbeda untuk melihat atau mengubah data milik satu santri.</p>
+      </div>
+
+      <div class="flow">
+        <div class="flow-map">
+          <div class="node node-root">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg>
+            Santri
+          </div>
+          <div class="node-kids">
+            <div class="node"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>Jadwal</div>
+            <div class="node"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5"/></svg>Laporan</div>
+            <div class="node"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5 7 21l5-2.5L17 21l-1.5-7.5"/></svg>Ujian</div>
+            <div class="node"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7h18v11H3z"/><path d="M3 11h18"/></svg>Pembayaran</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <caption class="eyebrow" style="padding:16px 16px 0;text-align:left">Hak akses</caption>
+            <thead><tr><th scope="col">Peran</th><th scope="col">Akses</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>Ustadzah</td>
+                <td>Akses penuh ke semua menu &mdash; menambah santri, membuat laporan, menjadwalkan ujian, mengelola pembayaran, dan mengirim pesan WhatsApp.</td>
+              </tr>
+              <tr>
+                <td>Orang tua</td>
+                <td>Akses terbatas lewat link khusus per anak &mdash; hanya melihat progres, jadwal, kehadiran, hasil ujian, sertifikat, dan status pembayaran anaknya sendiri. Tidak dapat mengubah data apa pun.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ MENU ============ -->
+  <section id="menu">
+    <div class="wrap">
+      <div class="section-head narrow">
+        <p class="eyebrow">Struktur menu ustadzah</p>
+        <h2>Sembilan menu, satu alur pikir</h2>
+      </div>
+
+      <div class="menus">
+        <article class="menu">
+          <div class="menu-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/></svg><h3>Beranda</h3></div>
+          <p>Ringkasan harian: jumlah santri, laporan yang belum dikirim, pembayaran yang belum lunas, dan santri yang tidak hadir pada pertemuan terakhir. Tiap butir bisa langsung diklik untuk ditindaklanjuti.</p>
+        </article>
+
+        <article class="menu">
+          <div class="menu-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c0-3.2 2.7-5 6-5s6 1.8 6 5"/><path d="M17 8h5M19.5 5.5v5"/></svg><h3>Santri</h3></div>
+          <p>Daftar seluruh santri beserta programnya &mdash; Iqro, Tahfidz, atau keduanya. Pilihan program di sinilah yang menentukan bentuk form laporan dan daftar ujian yang muncul untuk santri tersebut.</p>
+        </article>
+
+        <article class="menu">
+          <div class="menu-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5M9 8h3"/></svg><h3>Laporan</h3></div>
+          <p>Form pertemuan yang menyesuaikan program santri secara otomatis, lengkap dengan absensi, penilaian bintang, PR, catatan, dan pratinjau pesan WhatsApp di sisi kanan.</p>
+        </article>
+
+        <article class="menu">
+          <div class="menu-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5 7 21l5-2.5L17 21l-1.5-7.5"/></svg><h3>Ujian</h3></div>
+          <p>Jadwal ujian kenaikan yang muncul otomatis sesuai program. Isi tanggal, nilai, dan catatan &mdash; bila lulus, sertifikat dan ucapan selamat langsung disiapkan.</p>
+        </article>
+
+        <article class="menu">
+          <div class="menu-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><h3>Progress</h3></div>
+          <p>Perkembangan seluruh santri dalam satu halaman: progress bar halaman Iqro, status hafalan baru dan murojaah untuk santri Tahfidz. Melihat kondisi semua santri tanpa membuka satu per satu.</p>
+        </article>
+
+        <article class="menu">
+          <div class="menu-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 6h11v9H8l-4 4z"/><path d="M9 10h1M12 10h1"/><path d="M18 9h2v9l-3-3h-5"/></svg><h3>Orang Tua</h3></div>
+          <p>Simulasi tampilan yang dilihat orang tua, sekaligus tempat membuat link berbagi per anak. Satu klik untuk menyalin link unik.</p>
+        </article>
+
+        <article class="menu">
+          <div class="menu-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-4.2-7.3"/><path d="M3.5 20.5 5 16"/><path d="M15 4.5V9h4.5"/></svg><h3>WhatsApp Center</h3></div>
+          <p>Tiga jenis pesan yang bisa dikirim per santri: kirim laporan, ingatkan jadwal halaqah berikutnya, dan ingatkan pembayaran yang belum lunas.</p>
+        </article>
+
+        <article class="menu">
+          <div class="menu-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 7h18v11H3z"/><path d="M3 11h18M7 15h4"/></svg><h3>Pembayaran</h3></div>
+          <p>Status tiap santri &mdash; Lunas atau Belum Bayar &mdash; beserta nominal dan tanggal jatuh tempo. Status bisa diubah langsung, dan yang belum lunas punya tombol pengingat.</p>
+        </article>
+
+        <article class="menu">
+          <div class="menu-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/></svg><h3>Pengaturan</h3></div>
+          <p>Hal-hal yang berlaku umum: template pesan WhatsApp, harga tiap program, dan jadwal belajar tiap santri.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ LAPORAN ============ -->
+  <section id="laporan">
+    <div class="wrap">
+      <div class="section-head narrow">
+        <p class="eyebrow">Menu laporan</p>
+        <h2>Form yang berubah mengikuti program santri</h2>
+        <p class="lede" style="margin-top:16px">Anda tidak perlu memilih format. Begitu santri dipilih, form menyesuaikan sendiri &mdash; dan pesan WhatsApp tersusun sambil Anda mengisi.</p>
+      </div>
+
+      <div class="report">
+        <div>
+          <div class="tabs" role="tablist" aria-label="Program belajar">
+            <button class="tab" role="tab" id="tab-iqro" aria-controls="panel-iqro" aria-selected="true" type="button">Program Iqro</button>
+            <button class="tab" role="tab" id="tab-tahfidz" aria-controls="panel-tahfidz" aria-selected="false" type="button">Program Tahfidz</button>
+          </div>
+
+          <div id="panel-iqro" role="tabpanel" aria-labelledby="tab-iqro" tabindex="0">
+            <ul class="field-list">
+              <li class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg><div><b>Absensi</b><span>Tandai Hadir atau Tidak Hadir. Bila tidak hadir, form berganti menjadi kolom alasan dan catatan jadwal pengganti.</span></div></li>
+              <li class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 4h12v16H6z"/><path d="M9 9h6M9 13h4"/></svg><div><b>Jilid dan rentang halaman</b><span>Pilih jilid, lalu isi halaman awal sampai halaman akhir yang dibaca hari itu.</span></div></li>
+              <li class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4L4.2 9.7l5.4-.8z"/></svg><div><b>Penilaian bintang</b><span>Kelancaran, fokus, dan tajwid &mdash; masing-masing satu sampai lima bintang.</span></div></li>
+              <li class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><div><b>PR dan catatan</b><span>Tugas untuk di rumah dan catatan bebas dari ustadzah untuk orang tua.</span></div></li>
+            </ul>
+          </div>
+
+          <div id="panel-tahfidz" role="tabpanel" aria-labelledby="tab-tahfidz" tabindex="0" hidden>
+            <ul class="field-list">
+              <li class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg><div><b>Absensi</b><span>Sama seperti Iqro &mdash; bila tidak hadir, muncul kolom alasan dan jadwal pengganti.</span></div></li>
+              <li class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/></svg><div><b>Surah dan rentang ayat</b><span>Pilih langsung dari daftar 114 surah. Nomor ayat maksimum menyesuaikan otomatis dengan surah yang dipilih.</span></div></li>
+              <li class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg><div><b>Hafalan baru dan murojaah</b><span>Dua status terpisah, sehingga hafalan baru dan pengulangan tidak tercampur dalam satu catatan.</span></div></li>
+              <li class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4L4.2 9.7l5.4-.8z"/></svg><div><b>Penilaian, PR, dan catatan</b><span>Penilaian bintang yang sama, ditambah target hafalan berikutnya.</span></div></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="wa">
+          <div class="wa-top">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-4.2-7.3"/><path d="M3.5 20.5 5 16"/></svg>
+            Pratinjau pesan &middot; Bunda Aisyah
+          </div>
+          <div class="bubble" id="wa-body"></div>
+          <p class="wa-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+            Pesan tersusun otomatis dari data yang Anda isi. Pengiriman tetap Anda yang menekan tombolnya.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ UJIAN ============ -->
+  <section id="ujian">
+    <div class="wrap">
+      <div class="section-head narrow">
+        <p class="eyebrow">Menu ujian</p>
+        <h2>Rangkaian kenaikan yang tersambung</h2>
+        <p class="lede" style="margin-top:16px">Capaian ujian muncul sendiri sesuai program santri. Yang sudah lulus terkunci sebagai riwayat, yang berikutnya sudah menunggu di jalurnya.</p>
+      </div>
+
+      <div class="chain">
+        <div class="track">
+          <h3><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--green)" stroke-width="1.8" aria-hidden="true"><path d="M6 4h12v16H6z"/><path d="M9 9h6"/></svg>Iqro</h3>
+          <p>Ujian pada tiap kenaikan jilid, sampai khatam.</p>
+          <ul class="links">
+            <li class="link done"><span class="dot" aria-hidden="true">2</span><span class="link-body"><b>Naik Jilid 2</b><span class="num">14 Feb 2026 &middot; Mumtaz</span></span></li>
+            <li class="link done"><span class="dot" aria-hidden="true">3</span><span class="link-body"><b>Naik Jilid 3</b><span class="num">9 Apr 2026 &middot; Jayyid Jiddan</span></span></li>
+            <li class="link done"><span class="dot" aria-hidden="true">4</span><span class="link-body"><b>Naik Jilid 4</b><span class="num">21 Jul 2026 &middot; Jayyid</span></span></li>
+            <li class="link now"><span class="dot" aria-hidden="true">5</span><span class="link-body"><b>Naik Jilid 5</b><span>belum dijadwalkan</span></span></li>
+            <li class="link"><span class="dot" aria-hidden="true">6</span><span class="link-body"><b>Naik Jilid 6</b><span>belum dijadwalkan</span></span></li>
+            <li class="link"><span class="dot" aria-hidden="true">&#10022;</span><span class="link-body"><b>Khatam Iqro</b><span>belum dijadwalkan</span></span></li>
+          </ul>
+          <div class="grades">
+            <span class="grade top">Mumtaz</span>
+            <span class="grade">Jayyid Jiddan</span>
+            <span class="grade">Jayyid</span>
+            <span class="grade fail">Rosib</span>
+          </div>
+        </div>
+
+        <div class="track">
+          <h3><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--green)" stroke-width="1.8" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 5.5v15"/></svg>Tahfidz</h3>
+          <p>Ujian pada tiap capaian hafalan, dari seperempat juz sampai 30 juz.</p>
+          <ul class="links">
+            <li class="link done"><span class="dot" aria-hidden="true">&frac14;</span><span class="link-body"><b>Seperempat juz</b><span class="num">3 Mar 2026 &middot; Mumtaz</span></span></li>
+            <li class="link done"><span class="dot" aria-hidden="true">&frac12;</span><span class="link-body"><b>Setengah juz</b><span class="num">18 Mei 2026 &middot; Mumtaz</span></span></li>
+            <li class="link now"><span class="dot num" aria-hidden="true">1</span><span class="link-body"><b>1 juz</b><span class="num">dijadwalkan 20 Sep 2026</span></span></li>
+            <li class="link"><span class="dot num" aria-hidden="true">5</span><span class="link-body"><b>5 juz</b><span>belum dijadwalkan</span></span></li>
+            <li class="link"><span class="dot num" aria-hidden="true">10</span><span class="link-body"><b>10 juz</b><span>belum dijadwalkan</span></span></li>
+            <li class="link"><span class="dot num" aria-hidden="true">30</span><span class="link-body"><b>30 juz</b><span>15, 20, dan 25 juz ada di antaranya</span></span></li>
+          </ul>
+          <div class="grades">
+            <span class="grade">Tanggal ujian</span>
+            <span class="grade">Nilai</span>
+            <span class="grade">Catatan</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="9" r="5.2"/><path d="M8.5 13.5 7 21l5-2.6L17 21l-1.5-7.5"/></svg>
+        <div>
+          <h3>Lulus, sertifikat langsung siap</h3>
+          <p>Begitu nilai yang diisi bukan Rosib, sistem menampilkan sertifikat yang bisa diunduh &mdash; sekaligus menyiapkan pesan ucapan kelulusan untuk dikirim ke orang tua lewat WhatsApp. Tidak ada langkah tambahan yang harus Anda ingat.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ ORANG TUA ============ -->
+  <section id="orangtua">
+    <div class="wrap parent">
+      <div>
+        <p class="eyebrow">Halaman orang tua</p>
+        <h2>Satu link, dikirim sekali, dipantau kapan saja</h2>
+        <p class="lede" style="margin-top:16px">Pilih santri, klik <b>Bagikan link ke Orang Tua</b>, lalu kirim linknya lewat WhatsApp. Setelah itu orang tua bisa membuka sendiri kapan pun tanpa membuat akun dan tanpa login.</p>
+        <ul class="checklist">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg><span>Hanya menampilkan satu anak &mdash; tanpa menu navigasi, tanpa akses ke data santri lain.</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg><span>Isinya: jadwal berikutnya, kehadiran terakhir, progres Iqro atau Tahfidz, laporan terakhir, riwayat ujian dengan tombol unduh sertifikat, dan status pembayaran.</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg><span>Orang tua tidak dapat mengubah data apa pun.</span></li>
+        </ul>
+      </div>
+
+      <div class="phone">
+        <div class="ph-head">
+          <small>Perkembangan Ngaji</small>
+          <strong>Aisyah Nur Ramadhani</strong>
+        </div>
+        <div class="ph-body">
+          <div class="ph-card">
+            <h4>Jadwal berikutnya</h4>
+            <p class="num">Sabtu, 6 September &middot; 16.00</p>
+            <small>Halaqah privat di rumah</small>
+          </div>
+          <div class="ph-card">
+            <h4>Progres Iqro</h4>
+            <div class="bar" style="margin:4px 0 8px"><i style="width:47%"></i></div>
+            <p class="num" style="font-size:.82rem;font-weight:600">Jilid 4 &mdash; halaman 15 dari 32</p>
+          </div>
+          <div class="ph-card">
+            <h4>Laporan terakhir</h4>
+            <p>Hadir &middot; hal. 12&ndash;15</p>
+            <small>PR: ulang hal. 14&ndash;15, 3&times; sehari</small>
+          </div>
+          <div class="ph-card" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div><h4 style="margin-bottom:4px">Pembayaran</h4><p class="num" style="font-size:.85rem">September 2026</p></div>
+            <span class="pill pill-ok">Lunas</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ ALUR HARIAN ============ -->
+  <section id="alur">
+    <div class="wrap">
+      <div class="section-head narrow">
+        <p class="eyebrow">Alur kerja harian yang disarankan</p>
+        <h2>Lima langkah, berulang setiap hari mengajar</h2>
+      </div>
+
+      <ol class="steps">
+        <li class="step">
+          <span class="step-n" aria-hidden="true"></span>
+          <b>Buka Beranda</b>
+          <p>Lihat ringkasan: siapa yang belum dilaporkan, siapa yang belum bayar, siapa yang tidak hadir terakhir kali.</p>
+        </li>
+        <li class="step">
+          <span class="step-n" aria-hidden="true"></span>
+          <b>Setelah mengajar, buka Laporan</b>
+          <p>Pilih santri, tandai kehadiran, isi form sesuai program, lalu kirim laporan lewat WhatsApp.</p>
+        </li>
+        <li class="step">
+          <span class="step-n" aria-hidden="true"></span>
+          <b>Jika ada ujian kenaikan</b>
+          <p>Buka menu Ujian, isi tanggal dan nilai. Jika lulus, kirim ucapan dan sertifikat langsung dari pop-up yang muncul.</p>
+        </li>
+        <li class="step">
+          <span class="step-n" aria-hidden="true"></span>
+          <b>Cek Pembayaran secara berkala</b>
+          <p>Kirim pengingat untuk santri yang jatuh temponya mendekat atau belum lunas.</p>
+        </li>
+        <li class="step">
+          <span class="step-n" aria-hidden="true"></span>
+          <b>Bagikan link Orang Tua sekali di awal</b>
+          <p>Setiap santri baru cukup dikirimi satu link &mdash; setelah itu orang tua memantau sendiri.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ STATUS ============ -->
+  <section id="status">
+    <div class="wrap">
+      <div class="section-head narrow">
+        <p class="eyebrow">Status saat ini</p>
+        <h2>Prototipe interaktif, bukan versi produksi</h2>
+        <p class="lede" style="margin-top:16px">Seluruh alur kerja, tampilan, dan logikanya sudah berfungsi persis seperti rencana akhirnya. Yang belum: datanya belum tersimpan permanen dan belum bisa diakses lewat internet oleh orang lain.</p>
+      </div>
+
+      <div class="status">
+        <div class="panel now">
+          <h3><span class="pill pill-warn">Sekarang</span> Yang masih terbatas</h3>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Data santri, laporan, ujian, dan pembayaran hanya tersimpan sementara selama sesi berjalan &mdash; belum ke database sungguhan.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg><span>Link berbagi ke orang tua sudah berfungsi secara logika, tetapi baru benar-benar bisa dibuka orang tua setelah website di-hosting di domain sendiri.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg><span>Pesan WhatsApp disusun otomatis dan siap ditinjau, namun pengirimannya masih manual &mdash; sesuai rencana awal agar sederhana dan murah.</span></li>
+          </ul>
+        </div>
+
+        <div class="panel next">
+          <h3><span class="pill pill-off">Berikutnya</span> Langkah menuju produksi</h3>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span>Menghubungkan ke database agar semua data tersimpan permanen dan bisa diakses dari HP mana pun.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18"/></svg><span>Meng-hosting website ke domain sendiri agar link orang tua dapat dibuka dari luar.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h9"/></svg><span>Menyiapkan template pesan WhatsApp dan harga program di menu Pengaturan sesuai kebutuhan Anda.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-4.2-7.3"/><path d="M3.5 20.5 5 16"/></svg><span>Bila jumlah santri sudah banyak, mempertimbangkan integrasi WhatsApp API untuk pengiriman otomatis.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ FAQ ============ -->
+  <section id="tanya">
+    <div class="wrap">
+      <div class="section-head narrow">
+        <p class="eyebrow">Pertanyaan yang sering muncul</p>
+        <h2>Sebelum mulai dipakai</h2>
+      </div>
+      <div class="faq narrow" style="max-width:78ch">
+
+        <div class="qa">
+          <button type="button" aria-expanded="true" aria-controls="a1">
+            Apakah orang tua harus membuat akun?
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="ans open" id="a1"><p>Tidak. Orang tua cukup membuka link khusus anaknya yang Anda kirim lewat WhatsApp. Tanpa akun, tanpa kata sandi, tanpa aplikasi tambahan.</p></div>
+        </div>
+
+        <div class="qa">
+          <button type="button" aria-expanded="false" aria-controls="a2">
+            Pesan WhatsApp terkirim otomatis?
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="ans" id="a2"><p>Belum, dan ini disengaja. Sistem menyusun teksnya, Anda menekan tombol, lalu WhatsApp terbuka dengan pesan sudah terisi. Cara ini dipilih sejak awal agar sederhana dan murah. Integrasi WhatsApp API baru dipertimbangkan kalau jumlah santri sudah banyak.</p></div>
+        </div>
+
+        <div class="qa">
+          <button type="button" aria-expanded="false" aria-controls="a3">
+            Bagaimana kalau santri mengikuti Iqro dan Tahfidz sekaligus?
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="ans" id="a3"><p>Bisa. Program dipilih saat menambah santri, dan pilihan itulah yang menentukan bentuk form laporan serta daftar ujian yang muncul. Santri dengan dua program akan melihat kedua bagian sekaligus.</p></div>
+        </div>
+
+        <div class="qa">
+          <button type="button" aria-expanded="false" aria-controls="a4">
+            Kalau santri tidak hadir, apa yang dicatat?
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="ans" id="a4"><p>Form berganti sendiri: kolom penilaian hilang, digantikan kolom alasan tidak hadir dan catatan jadwal pengganti. Ketidakhadiran juga muncul di Beranda sebagai butir yang perlu ditindaklanjuti.</p></div>
+        </div>
+
+        <div class="qa">
+          <button type="button" aria-expanded="false" aria-controls="a5">
+            Data yang saya isi sekarang akan hilang?
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="ans" id="a5"><p>Untuk sementara ya &mdash; pada tahap prototipe, data hanya bertahan selama sesi berjalan. Sesudah database terhubung, semua isian tersimpan permanen dan bisa dibuka dari HP mana pun.</p></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="endcta">
+        <h2>Siap dijadikan versi produksi</h2>
+        <p>Prototipe ini sudah menjadi acuan bentuk akhirnya. Tinggal menghubungkan database dan meng-hosting ke domain sendiri, lalu link orang tua bisa langsung dibagikan.</p>
+        <div class="cover-cta">
+          <a class="btn btn-cover" href="#alur">Baca alur kerja harian</a>
+          <a class="btn btn-cover-ghost" href="#status">Lihat langkah berikutnya</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span><b style="font-family:var(--f-display);font-size:1.05rem">Sanad</b> &mdash; Sistem Laporan Perkembangan Ngaji Privat</span>
+    <span>Halaman ini disusun dari dokumen <i>Cara Kerja Website</i>.</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---- pratinjau WhatsApp per program ---- */
+  var pesan = {
+    iqro:
+      "*Laporan Ngaji — Sanad*\n" +
+      "Ananda: Aisyah Nur Ramadhani\n" +
+      "Rabu, 3 September 2026 · 16.00–17.00\n\n" +
+      "Kehadiran: Hadir\n" +
+      "Program: Iqro Jilid 4\n" +
+      "Halaman: 12–15\n\n" +
+      "Kelancaran: ★★★★☆\n" +
+      "Fokus: ★★★★★\n" +
+      "Tajwid: ★★★☆☆\n\n" +
+      "PR: ulang halaman 14–15, 3x sehari\n" +
+      "Catatan: bacaan mad sudah lebih stabil, tinggal panjang-pendeknya dijaga.\n\n" +
+      "— Ustadzah Khadijah",
+    tahfidz:
+      "*Laporan Ngaji — Sanad*\n" +
+      "Ananda: Aisyah Nur Ramadhani\n" +
+      "Rabu, 3 September 2026 · 16.00–17.00\n\n" +
+      "Kehadiran: Hadir\n" +
+      "Program: Tahfidz\n" +
+      "Hafalan baru: Al-Mulk 1–10\n" +
+      "Murojaah: An-Naba’ 1–20\n\n" +
+      "Kelancaran: ★★★★☆\n" +
+      "Fokus: ★★★★★\n" +
+      "Tajwid: ★★★★☆\n\n" +
+      "PR: murojaah Al-Mulk 1–10 tiap ba’da maghrib\n" +
+      "Catatan: siap diujikan untuk capaian 1 juz bulan ini.\n\n" +
+      "— Ustadzah Khadijah"
+  };
+
+  var body = document.getElementById("wa-body");
+  function tulis(k){
+    if(!body) return;
+    body.textContent = pesan[k];
+    var t = document.createElement("span");
+    t.className = "wa-time";
+    t.textContent = "17.06 ✓✓";
+    body.appendChild(t);
+  }
+  tulis("iqro");
+
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  function pilih(tab){
+    tabs.forEach(function(t){
+      var on = t === tab;
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      var p = document.getElementById(t.getAttribute("aria-controls"));
+      if(p) p.hidden = !on;
+    });
+    tulis(tab.id === "tab-tahfidz" ? "tahfidz" : "iqro");
+  }
+  tabs.forEach(function(tab, i){
+    tab.addEventListener("click", function(){ pilih(tab); });
+    tab.addEventListener("keydown", function(e){
+      if(e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      var next = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+      next.focus(); pilih(next);
+    });
+  });
+
+  /* ---- akordeon tanya jawab ---- */
+  document.querySelectorAll(".qa button").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var buka = btn.getAttribute("aria-expanded") === "true";
+      btn.setAttribute("aria-expanded", buka ? "false" : "true");
+      var ans = document.getElementById(btn.getAttribute("aria-controls"));
+      if(ans) ans.classList.toggle("open", !buka);
+    });
+  });
+})();
+</script>
+</body>
+</html>
