@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Sanad — Aplikasi Ustadzah</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="gaya.css">
+<style>
+/* ---------- rangka aplikasi ---------- */
+#layar-masuk{min-height:100vh;display:grid;place-items:center;padding:24px}
+.kotak-masuk{width:min(400px,100%);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);overflow:hidden}
+.masuk-kepala{background:var(--green-deep);color:#F1EFE4;padding:28px 26px}
+.masuk-kepala h1{color:#F1EFE4;font-size:1.9rem;letter-spacing:.02em}
+.masuk-kepala p{color:#A9C3B9;font-size:.88rem;margin-top:4px}
+.masuk-isi{padding:26px;display:grid;gap:16px}
+
+#layar-app{display:none;min-height:100vh}
+#layar-app.tampil{display:block}
+
+.puncak{
+  position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;
+  height:60px;padding:0 16px;background:var(--surface);border-bottom:1px solid var(--line);
+}
+.merek{display:flex;align-items:center;gap:9px;font-family:var(--f-display);font-size:1.25rem;font-weight:600}
+.merek svg{width:24px;height:24px;color:var(--green)}
+.puncak .kanan{margin-left:auto;display:flex;align-items:center;gap:10px}
+.nama-user{font-size:.85rem;color:var(--muted);display:none}
+@media (min-width:700px){.nama-user{display:block}}
+.tombol-menu{
+  width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--line);
+  background:var(--surface);border-radius:var(--r-md);cursor:pointer;color:var(--ink);
+}
+@media (min-width:1000px){.tombol-menu{display:none}}
+
+.rangka{display:block}
+@media (min-width:1000px){.rangka{display:grid;grid-template-columns:var(--nav-w) 1fr;align-items:start}}
+
+/* laci menu */
+#laci{
+  position:fixed;inset:0 auto 0 0;width:var(--nav-w);z-index:60;background:var(--surface);
+  border-right:1px solid var(--line);padding:14px 12px;overflow-y:auto;
+  transform:translateX(-100%);transition:transform .22s ease;
+}
+#laci.buka{transform:none}
+@media (min-width:1000px){
+  #laci{position:sticky;top:60px;height:calc(100vh - 60px);transform:none;border-right:1px solid var(--line)}
+}
+#tirai{position:fixed;inset:0;background:rgba(18,20,16,.5);z-index:55;display:none}
+#tirai.buka{display:block}
+@media (min-width:1000px){#tirai{display:none!important}}
+
+.menu-nav{display:grid;gap:3px;list-style:none;margin:0;padding:0}
+.menu-nav a{
+  display:flex;align-items:center;gap:11px;min-height:44px;padding:0 12px;border-radius:var(--r-md);
+  text-decoration:none;color:var(--ink-2);font-size:.93rem;font-weight:500;transition:background .15s,color .15s;
+}
+.menu-nav a svg{width:18px;height:18px;flex:none;color:var(--muted)}
+.menu-nav a:hover{background:var(--surface-2);color:var(--ink)}
+.menu-nav a.aktif{background:var(--green-soft);color:var(--green-text);font-weight:600}
+.menu-nav a.aktif svg{color:var(--green)}
+.menu-nav a .lencana{
+  margin-left:auto;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--gold);
+  color:#fff;font-size:.72rem;font-weight:700;display:grid;place-items:center;font-variant-numeric:tabular-nums;
+}
+.nav-judul{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:14px 12px 6px}
+
+#isi{padding:22px 16px 80px;max-width:1080px;width:100%}
+@media (min-width:700px){#isi{padding:28px 26px 90px}}
+
+/* ubin ringkasan beranda */
+.ubin-baris{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:22px}
+.ubin{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px}
+.ubin b{display:block;font-family:var(--f-display);font-size:2rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.ubin span{font-size:.82rem;color:var(--muted)}
+.ubin.perlu{border-left:4px solid var(--gold)}
+.ubin.aman{border-left:4px solid var(--green)}
+
+.daftar-tindak{display:grid;gap:10px}
+.tindak{
+  display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--surface);
+  border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:var(--r-md);
+}
+.tindak .isi{flex:1;min-width:0}
+.tindak b{display:block;font-size:.94rem}
+.tindak span{font-size:.82rem;color:var(--muted)}
+
+/* pratinjau WhatsApp */
+.wa-kotak{background:#0F231C;border-radius:var(--r-lg);padding:16px;border:1px solid #24463C}
+.wa-judul{display:flex;align-items:center;gap:9px;color:#CFE3DA;font-size:.8rem;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.1)}
+.wa-judul svg{width:17px;height:17px;color:#5CCB8E}
+.wa-gelembung{
+  margin-top:14px;background:#E7F3E9;color:#17231C;border-radius:12px 12px 12px 3px;
+  padding:13px 15px;font-size:.86rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;
+}
+
+/* rantai ujian */
+.rantai{list-style:none;margin:0;padding:0;position:relative}
+.rantai::before{content:"";position:absolute;left:15px;top:16px;bottom:16px;width:2px;background:var(--line)}
+.mata{display:flex;gap:14px;align-items:center;padding:10px 0;position:relative}
+.mata .bulat{
+  width:32px;height:32px;flex:none;border-radius:50%;border:2px solid var(--line);background:var(--surface);
+  display:grid;place-items:center;font-size:.72rem;font-weight:700;color:var(--muted);z-index:1;
+  font-variant-numeric:tabular-nums;
+}
+.mata.lulus .bulat{background:var(--green);border-color:var(--green);color:var(--on-green)}
+.mata.gagal .bulat{background:var(--danger-soft);border-color:var(--danger);color:var(--danger)}
+.mata .teks{flex:1;min-width:0}
+.mata .teks b{display:block;font-size:.94rem}
+.mata .teks span{font-size:.8rem;color:var(--muted)}
+
+/* sertifikat */
+.sertifikat{
+  border:2px solid var(--gold);border-radius:var(--r-lg);background:var(--gold-soft);
+  padding:32px 26px;text-align:center;
+}
+.sertifikat .kop{font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.sertifikat h2{font-size:1.8rem;margin:10px 0 4px}
+.sertifikat .nama{font-family:var(--f-display);font-size:2rem;color:var(--green-text);margin:14px 0 6px}
+.sertifikat .ket{font-size:.95rem;color:var(--ink-2)}
+.sertifikat .nilai{display:inline-block;margin-top:16px;font-size:1.1rem;font-weight:700;color:var(--gold)}
+.sertifikat .kaki{margin-top:22px;font-size:.84rem;color:var(--muted)}
+@media print{
+  body *{visibility:hidden}
+  .sertifikat,.sertifikat *{visibility:visible}
+  .sertifikat{position:absolute;inset:20px;border-color:#A9762A;background:#fff}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= LAYAR MASUK ================= -->
+<div id="layar-masuk">
+  <div class="kotak-masuk">
+    <div class="masuk-kepala">
+      <h1>Sanad</h1>
+      <p>Sistem Laporan Perkembangan Ngaji Privat</p>
+    </div>
+    <form class="masuk-isi" id="form-masuk">
+      <label class="isian">
+        <span>Email</span>
+        <input type="email" id="masuk-email" autocomplete="username" required>
+      </label>
+      <label class="isian">
+        <span>Kata sandi</span>
+        <input type="password" id="masuk-sandi" autocomplete="current-password" required>
+      </label>
+      <p class="galat" id="masuk-galat" hidden></p>
+      <button class="btn btn-primary" type="submit" id="masuk-tombol">Masuk</button>
+      <p class="bantuan" id="masuk-bantuan">Akun dibuat sekali di Supabase &rarr; Authentication &rarr; Add user.</p>
+    </form>
+  </div>
+</div>
+
+<!-- ================= LAYAR APLIKASI ================= -->
+<div id="layar-app">
+  <header class="puncak">
+    <button class="tombol-menu" id="buka-laci" aria-label="Buka menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <span class="merek">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 5.5v15"/><path d="M8.5 8.5h6"/>
+      </svg>
+      Sanad
+    </span>
+    <div class="kanan">
+      <span class="nama-user" id="nama-user"></span>
+      <button class="btn btn-ghost btn-kecil" id="tombol-keluar" type="button">Keluar</button>
+    </div>
+  </header>
+
+  <div id="tirai"></div>
+
+  <div class="rangka">
+    <nav id="laci" aria-label="Menu utama">
+      <p class="nav-judul">Harian</p>
+      <ul class="menu-nav">
+        <li><a href="#/beranda" data-menu="beranda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/></svg>Beranda<span class="lencana" id="lencana-beranda" hidden></span></a></li>
+        <li><a href="#/laporan" data-menu="laporan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5"/></svg>Laporan</a></li>
+        <li><a href="#/ujian" data-menu="ujian"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5 7 21l5-2.5L17 21l-1.5-7.5"/></svg>Ujian</a></li>
+        <li><a href="#/wa" data-menu="wa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-4.2-7.3"/><path d="M3.5 20.5 5 16"/></svg>WhatsApp Center</a></li>
+      </ul>
+
+      <p class="nav-judul">Data</p>
+      <ul class="menu-nav">
+        <li><a href="#/santri" data-menu="santri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c0-3.2 2.7-5 6-5s6 1.8 6 5"/><path d="M17 8h5M19.5 5.5v5"/></svg>Santri</a></li>
+        <li><a href="#/progress" data-menu="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Progress</a></li>
+        <li><a href="#/pembayaran" data-menu="pembayaran"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 7h18v11H3z"/><path d="M3 11h18M7 15h4"/></svg>Pembayaran<span class="lencana" id="lencana-bayar" hidden></span></a></li>
+        <li><a href="#/orangtua" data-menu="orangtua"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h11v9H8l-4 4z"/><path d="M18 9h2v9l-3-3h-5"/></svg>Orang Tua</a></li>
+      </ul>
+
+      <p class="nav-judul">Lain-lain</p>
+      <ul class="menu-nav">
+        <li><a href="#/pengaturan" data-menu="pengaturan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/></svg>Pengaturan</a></li>
+      </ul>
+    </nav>
+
+    <main id="isi" role="main">
+      <div class="memuat"><span class="putar"></span> Memuat&hellip;</div>
+    </main>
+  </div>
+</div>
+
+<div id="kabar" aria-live="polite"></div>
+
+<dialog id="dlg">
+  <div class="dlg-isi">
+    <h3 id="dlg-judul">Yakin?</h3>
+    <p id="dlg-pesan"></p>
+  </div>
+  <div class="dlg-kaki">
+    <button class="btn btn-ghost" id="dlg-batal" type="button">Batal</button>
+    <button class="btn btn-danger" id="dlg-ya" type="button">Ya, lanjut</button>
+  </div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="surah.js"></script>
+<script src="aplikasi.js"></script>
+</body>
+</html>
