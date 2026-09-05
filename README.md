@@ -1,15 +1,30 @@
 # Sanad
 
-Landing page **Sanad — Sistem Laporan Perkembangan Ngaji Privat**.
+**Sistem Laporan Perkembangan Ngaji Privat.**
 
-Halaman langsung: https://savianoza-jpg.github.io/sanad/
+| Halaman | Alamat |
+|---|---|
+| Penjelasan sistem | https://savianoza-jpg.github.io/sanad/ |
+| Aplikasi ustadzah | https://savianoza-jpg.github.io/sanad/app/ |
+| Halaman orang tua | https://savianoza-jpg.github.io/sanad/anak/?t=TOKEN |
 
-Isi halaman disusun dari dokumen *Cara Kerja Website*: alur data, 9 menu ustadzah,
-form laporan Iqro/Tahfidz, ujian kenaikan & sertifikat, halaman orang tua, alur kerja
-harian, dan status prototipe.
+## Isi
 
-## Cara mengubah isi
+- `index.html` — landing page, penjelasan cara kerja sistem
+- `app/` — aplikasi ustadzah: 9 menu, perlu login
+- `anak/` — halaman orang tua: hanya baca, tanpa login, dibuka lewat token
+- `sql/01-skema.sql` — skema database Supabase beserta aturan keamanannya
+- `PANDUAN-PASANG.md` — cara memasang database, 4 langkah
 
-Seluruh halaman ada di satu berkas `index.html` (HTML + CSS + JS jadi satu, tanpa build).
-Sunting berkasnya, simpan, lalu naikkan lagi ke repo ini — GitHub Pages akan
-memperbarui halaman sendiri dalam 1–2 menit.
+## Cara memasang
+
+Baca `PANDUAN-PASANG.md`. Ringkasnya: buat proyek Supabase, jalankan
+`sql/01-skema.sql`, buat akun ustadzah, lalu isi `app/config.js`.
+
+## Catatan
+
+Tanpa build, tanpa framework — HTML, CSS, dan JavaScript biasa. Sunting
+berkasnya, naikkan ke repo ini, GitHub Pages memperbarui sendiri 1–2 menit.
+
+Kunci `anon` di `app/config.js` memang boleh publik; yang menjaga data adalah
+aturan RLS di `sql/01-skema.sql`. Kunci `service_role` tidak boleh ada di repo ini.
